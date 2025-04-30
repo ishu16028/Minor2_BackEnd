@@ -1,0 +1,44 @@
+jobseeker_platform/
+├── app/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   ├── job.py
+│   │   ├── application.py
+│   │   ├── resume.py
+│   │   └── hr_contact.py
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── auth.py
+│   │   ├── jobs.py
+│   │   ├── tracker.py
+│   │   ├── favorites.py
+│   │   ├── resume.py
+│   │   ├── email.py
+│   │   └── admin.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── job_scraper.py
+│   │   ├── resume_parser.py
+│   │   ├── email_service.py
+│   │   └── auth_service.py
+│   ├── static/
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── resume_templates/
+│   └── templates/
+│       ├── base.html
+│       ├── auth/
+│       ├── jobs/
+│       ├── tracker/
+│       ├── resume/
+│       └── admin/
+├── migrations/
+├── tests/
+├── instance/
+├── .env.example
+├── .gitignore
+├── requirements.txt
+└── run.py
