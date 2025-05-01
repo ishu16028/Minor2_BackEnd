@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Scraping | Admin | JobSeeker Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Job Scraping</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Job Scraper</h1>
+            <p class="lead">Scrape new job listings from multiple platforms.</p>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Start New Scraping Job</h5>
+                </div>
+                <div class="card-body">
+                    <form id="scrape-form" method="post" action="{{ url_for('jobs.scrape') }}">
+                        <div class="form-group">
+                            <label for="keywords">Keywords</label>
+                            <input type="text" class="form-control" id="keywords" name="keywords"
+                                   placeholder="e.g. software engineer, data scientist" required>
+                            <small class="form-text text-muted">Comma separated list of job titles or skills</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="location">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location"
+                                           placeholder="e.g. San Francisco, New York">
+                                    <small class="form-text text-muted">Leave blank for all locations</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="job-type">Job Type</label>
+                                    <select class="form-control" id="job-type" name="job_type">
+                                        <option value="">All Types</option>
+                                        <option value="full_time">Full Time</option>
+                                        <option value="part_time">Part Time</option>
+                                        <option value="contract">Contract</option>
+                                        <option value="internship">Internship</option>
+                                        <option value="remote">Remote Only</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                        <label>Sources</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="linkedin" id="source-linkedin" name="sources[]" checked>
+                                        <label class="form-check-label" for="source-linkedin">
+                                            LinkedIn
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="indeed" id="source-indeed" name="sources[]" checked>
+                                        <label class="form-check-label" for="source-indeed">
+                                            Indeed
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="internshala" id="source-internshala" name="sources[]" checked>
+                                        <label class="form-check-label" for="source-internshala">
+                                            Internshala
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="max-pages">Max Pages</label>
+                                    <input type="number" class="form-control" id="max-pages" name="max_pages" value="2" min="1" max="10">
+                                    <small class="form-text text-muted">Number of pages to scrape from each source</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="start-scraping-btn">
+                            <span class="spinner-border spinner-border-sm d-none" id="scraping-spinner" role="status" aria-hidden="true"></span>
+                            Start Scraping
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Scraping History</h5>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="refresh-history-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="scraping-history">
+                        <div class="text-center py-3">
+                            <p class="text-muted">Loading scraping history...</p>
+                            <div class="spinner-border" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Load scraping history
+        loadScrapingHistory();
+
+        // Form submission
+        $('#scrape-form').on('submit', function(e) {
+            e.preventDefault();
+
+            $('#start-scraping-btn').prop('disabled', true);
+            $('#scraping-spinner').removeClass('d-none');
+
+            // Get form data
+            const formData = $(this).serialize();
+
+// Replace this in your templates/jobs/scrape.html:
+
+$('#scrape-form').on('submit', function(e) {
+    e.preventDefault();
+
+    $('#start-scraping-btn').prop('disabled', true);
+    $('#scraping-spinner').removeClass('d-none');
+
+    // Get form data
+    const formData = $(this).serialize();
+
+    // Make actual API call to Flask endpoint
+    $.post("{{ url_for('jobs.scrape') }}", formData, function(response) {
+        if (response.success) {
+            alert(`Scraping successful! Found ${response.total_jobs} jobs (${response.new_jobs_saved} new).`);
+            loadScrapingHistory(); // Refresh the history
+        } else {
+            alert(`Error: ${response.error}`);
+        }
+    })
+    .fail(function(xhr) {
+        alert('Error: Could not complete scraping request');
+    })
+    .always(function() {
+        $('#start-scraping-btn').prop('disabled', false);
+        $('#scraping-spinner').addClass('d-none');
+    });
+});
+
+function loadScrapingHistory() {
+    $('#scraping-history').html(`
+        <div class="text-center py-3">
+            <p class="text-muted">Loading scraping history...</p>
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    `);
+
+    // Make actual API call to get history
+    $.get("{{ url_for('jobs.scrape_history') }}", function(data) {
+        if (data.history && data.history.length) {
+            let historyHtml = '<table class="table table-striped">';
+            historyHtml += `
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Keywords</th>
+                        <th>Sources</th>
+                        <th>Total Jobs</th>
+                        <th>New Jobs</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            data.history.forEach(item => {
+                historyHtml += `
+                    <tr>
+                        <td>${item.date}</td>
+                        <td>${item.keywords}</td>
+                        <td>${item.sources.join(', ')}</td>
+                        <td>${item.total_jobs}</td>
+                        <td>${item.new_jobs_saved}</td>
+                    </tr>
+                `;
+            });
+
+            historyHtml += '</tbody></table>';
+            $('#scraping-history').html(historyHtml);
+        } else {
+            $('#scraping-history').html('<div class="alert alert-info">No scraping history available</div>');
+        }
+    })
+    .fail(function() {
+        $('#scraping-history').html('<div class="alert alert-danger">Failed to load scraping history</div>');
+    });
+}
+            setTimeout(function() {
+                $('#scraping-history').html('<div class="alert alert-info">Scraping history will be displayed here</div>');
+            }, 1000);
+        });
+    });
+</script>
+{% endblock %}
