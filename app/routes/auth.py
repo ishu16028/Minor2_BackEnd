@@ -1,39 +1,43 @@
 # app/routes/auth.py
-from flask import Blueprint, request, jsonify, session, current_app
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Blueprint, request, jsonify, redirect, url_for, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from app.models.user import User
+from app.models.user import User, Role
+from app.services.auth_service import (
+    hash_password,
+    verify_password,
+    get_google_auth_url,
+    exchange_code_for_tokens,
+    get_google_user_info
+)
 from app import db
-import requests
-import json
-from oauthlib.oauth2 import WebApplicationClient
-import os
 
 auth_bp = Blueprint('auth', __name__)
-client = WebApplicationClient(current_app.config['GOOGLE_CLIENT_ID'])
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
+    """Register a new user"""
     data = request.get_json()
 
-    # Check if user exists
-    existing_user = User.query.filter_by(email=data['email']).first()
-    if existing_user:
-        return jsonify({'message': 'Email already registered'}), 409
+    # Validate required fields
+    if not all(k in data for k in ['email', 'password', 'name']):
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    # Check if user already exists
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'message': 'User already exists with this email'}), 409
 
     # Create new user
     new_user = User(
+        name=data['name'],
         email=data['email'],
-        password=generate_password_hash(data['password']),
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        role='user'
+        password_hash=hash_password(data['password']),
+        role=Role.USER
     )
 
     db.session.add(new_user)
     db.session.commit()
 
-    # Create token
+    # Generate access token
     access_token = create_access_token(identity=new_user.id)
 
     return jsonify({
@@ -41,22 +45,29 @@ def register():
         'access_token': access_token,
         'user': {
             'id': new_user.id,
+            'name': new_user.name,
             'email': new_user.email,
-            'first_name': new_user.first_name,
-            'last_name': new_user.last_name,
-            'role': new_user.role
+            'role': new_user.role.value
         }
     }), 201
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
+    """Login user with email and password"""
     data = request.get_json()
 
+    # Validate required fields
+    if not all(k in data for k in ['email', 'password']):
+        return jsonify({'message': 'Missing email or password'}), 400
+
+    # Find user by email
     user = User.query.filter_by(email=data['email']).first()
 
-    if not user or not check_password_hash(user.password, data['password']):
-        return jsonify({'message': 'Invalid credentials'}), 401
+    # Check if user exists and password is correct
+    if not user or not verify_password(user.password_hash, data['password']):
+        return jsonify({'message': 'Invalid email or password'}), 401
 
+    # Generate access token
     access_token = create_access_token(identity=user.id)
 
     return jsonify({
@@ -64,96 +75,79 @@ def login():
         'access_token': access_token,
         'user': {
             'id': user.id,
+            'name': user.name,
             'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'role': user.role
+            'role': user.role.value
         }
     }), 200
 
-@auth_bp.route('/google', methods=['GET'])
-def google_login():
-    # Google OAuth configuration
-    google_provider_cfg = requests.get(current_app.config['GOOGLE_DISCOVERY_URL']).json()
-    authorization_endpoint = google_provider_cfg["authorization_endpoint"]
+@auth_bp.route('/google-auth-url', methods=['GET'])
+def google_auth_url():
+    """Get Google OAuth authorization URL"""
+    auth_url = get_google_auth_url()
+    return jsonify({'auth_url': auth_url}), 200
 
-    # Use library to construct the request for Google login
-    request_uri = client.prepare_request_uri(
-        authorization_endpoint,
-        redirect_uri=request.base_url + "/callback",
-        scope=["openid", "email", "profile"],
-    )
-
-    return jsonify({'redirect_url': request_uri})
-
-@auth_bp.route('/google/callback', methods=['GET'])
+@auth_bp.route('/google-callback', methods=['GET'])
 def google_callback():
-    # Get authorization code from request
-    code = request.args.get("code")
+    """Handle Google OAuth callback"""
+    code = request.args.get('code')
+    if not code:
+        return jsonify({'message': 'Authorization code not provided'}), 400
 
-    # Get Google provider configuration
-    google_provider_cfg = requests.get(current_app.config['GOOGLE_DISCOVERY_URL']).json()
-    token_endpoint = google_provider_cfg["token_endpoint"]
+    # Exchange code for tokens
+    token_data = exchange_code_for_tokens(code)
+    if not token_data:
+        return jsonify({'message': 'Failed to exchange code for tokens'}), 400
 
-    # Prepare and send request to get tokens
-    token_url, headers, body = client.prepare_token_request(
-        token_endpoint,
-        authorization_response=request.url,
-        redirect_url=request.base_url,
-        code=code
-    )
-    token_response = requests.post(
-        token_url,
-        headers=headers,
-        data=body,
-        auth=(current_app.config['GOOGLE_CLIENT_ID'], current_app.config['GOOGLE_CLIENT_SECRET']),
-    )
+    # Get user information from Google
+    user_info = get_google_user_info(token_data['access_token'])
+    if not user_info:
+        return jsonify({'message': 'Failed to get user info from Google'}), 400
 
-    # Parse token response
-    client.parse_request_body_response(json.dumps(token_response.json()))
+    # Check if user already exists
+    user = User.query.filter_by(email=user_info['email']).first()
 
-    # Get user info using token
-    userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
-    uri, headers, body = client.add_token(userinfo_endpoint)
-    userinfo_response = requests.get(uri, headers=headers, data=body)
-
-    # Make sure the email is verified
-    user_info = userinfo_response.json()
-    if not user_info.get("email_verified"):
-        return jsonify({'message': 'Email not verified with Google'}), 400
-
-    # Find or create user
-    user = User.query.filter_by(email=user_info["email"]).first()
-    if not user:
-        user = User(
-            email=user_info["email"],
-            first_name=user_info.get("given_name", ""),
-            last_name=user_info.get("family_name", ""),
-            password=None,  # No password for OAuth
-            oauth_provider="google",
-            role="user"
-        )
-        db.session.add(user)
+    if user:
+        # Update existing user with Google token
+        user.google_token = token_data
+        user.name = user_info.get('name', user.name)
         db.session.commit()
+    else:
+        # Create new user
+        new_user = User(
+            name=user_info.get('name', 'Google User'),
+            email=user_info['email'],
+            google_token=token_data,
+            role=Role.USER
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        user = new_user
 
-    # Create token
+    # Generate access token
     access_token = create_access_token(identity=user.id)
 
-    return jsonify({
-        'message': 'Google login successful',
-        'access_token': access_token,
-        'user': {
-            'id': user.id,
-            'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'role': user.role
-        }
-    }), 200
+    # For API, return JSON. For web, redirect to frontend with token
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({
+            'message': 'Google login successful',
+            'access_token': access_token,
+            'user': {
+                'id': user.id,
+                'name': user.name,
+                'email': user.email,
+                'role': user.role.value
+            }
+        }), 200
+    else:
+        # Redirect to frontend with token
+        frontend_url = current_app.config.get('FRONTEND_URL', 'http://localhost:3000')
+        return redirect(f"{frontend_url}/auth/callback?token={access_token}")
 
-@auth_bp.route('/me', methods=['GET'])
+@auth_bp.route('/user', methods=['GET'])
 @jwt_required()
-def get_current_user():
+def get_user():
+    """Get current user information"""
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
 
@@ -161,11 +155,48 @@ def get_current_user():
         return jsonify({'message': 'User not found'}), 404
 
     return jsonify({
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'role': user.role.value,
+        'has_google_connection': bool(user.google_token),
+        'created_at': user.created_at.strftime('%Y-%m-%d')
+    }), 200
+
+@auth_bp.route('/user', methods=['PUT'])
+@jwt_required()
+def update_user():
+    """Update user profile"""
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    data = request.get_json()
+
+    # Update fields if provided
+    if 'name' in data:
+        user.name = data['name']
+
+    # Update password if provided
+    if 'password' in data and data['password']:
+        user.password_hash = hash_password(data['password'])
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'User profile updated successfully',
         'user': {
             'id': user.id,
+            'name': user.name,
             'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'role': user.role
+            'role': user.role.value
         }
     }), 200
+
+@auth_bp.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    """Logout user (client should discard token)"""
+    return jsonify({'message': 'Logout successful'}), 200

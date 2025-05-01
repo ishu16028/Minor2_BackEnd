@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Resume | JobSeeker Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Edit Resume</h1>
+                <div>
+                    <a href="{{ url_for('resume.view') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to View
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form id="resume-edit-form">
+                        <!-- Basic Information -->
+                        <h5 class="border-bottom pb-2">Basic Information</h5>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="edit-name" name="name" value="{{ resume.name if resume }}">
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <h5 class="border-bottom pb-2 mt-4">Contact Information</h5>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Email</label>
+                            <div class="col-sm-10">
+                                <input type="email" class="form-control" id="edit-email" name="email" value="{{ resume.contact_details.email if resume and resume.contact_details }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Phone</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="edit-phone" name="phone" value="{{ resume.contact_details.phone if resume and resume.contact_details }}">
+                            </div>
+                        </div>
+
+                        <!-- Links -->
+                        <h5 class="border-bottom pb-2 mt-4">Social Links</h5>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">LinkedIn</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="edit-linkedin" name="linkedin" value="{{ resume.social_links.linkedin if resume and resume.social_links }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">GitHub</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="edit-github" name="github" value="{{ resume.social_links.github if resume and resume.social_links }}">
+                            </div>
+                        </div>
+
+                        <!-- Education -->
+                        <h5 class="border-bottom pb-2 mt-4">Education</h5>
+                        <div id="education-container">
+                            {% if resume and resume.education %}
+                                {% for edu in resume.education %}
+                                    <div class="education-item card mb-3">
+                                        <div class="card-body">
+                                            <button type="button" class="close remove-education-btn">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                            <div class="form-group">
+                                                <label>Degree</label>
+                                                <input type="text" class="form-control education-degree" name="education[{{ loop.index0 }}][degree]" value="{{ edu.degree }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Institution</label>
+                                                <input type="text" class="form-control education-institution" name="education[{{ loop.index0 }}][institution]" value="{{ edu.institution }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>CGPA</label>
+                                                <input type="text" class="form-control education-cgpa" name="education[{{ loop.index0 }}][cgpa]" value="{{ edu.cgpa }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-education-btn">
+                            <i class="fas fa-plus"></i> Add Education
+                        </button>
+
+                        <!-- Skills -->
+                        <h5 class="border-bottom pb-2 mt-4">Skills</h5>
+                        <div class="form-group">
+                            <label>Technical Skills</label>
+                            <input type="text" class="form-control" id="edit-skills" name="skills" value="{{ resume.skills|join(', ') if resume and resume.skills }}">
+                            <small class="form-text text-muted">Separate skills with commas</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Soft Skills</label>
+                            <input type="text" class="form-control" id="edit-soft-skills" name="soft_skills" value="{{ resume.soft_skills|join(', ') if resume and resume.soft_skills }}">
+                            <small class="form-text text-muted">Separate skills with commas</small>
+                        </div>
+
+                        <!-- Projects -->
+                        <h5 class="border-bottom pb-2 mt-4">Projects</h5>
+                        <div id="projects-container">
+                            {% if resume and resume.projects %}
+                                {% for project in resume.projects %}
+                                    <div class="project-item card mb-3">
+                                        <div class="card-body">
+                                            <button type="button" class="close remove-project-btn">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                            <div class="form-group">
+                                                <label>Project Name</label>
+                                                <input type="text" class="form-control project-name" name="projects[{{ loop.index0 }}][name]" value="{{ project.name }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Description</label>
+                                                <textarea class="form-control project-description" name="projects[{{ loop.index0 }}][description]" rows="2">{{ project.description }}</textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Technology Stack</label>
+                                                <input type="text" class="form-control project-tech" name="projects[{{ loop.index0 }}][tech_stack]" value="{{ project.tech_stack|join(', ') if project.tech_stack }}">
+                                                <small class="form-text text-muted">Separate technologies with commas</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-project-btn">
+                            <i class="fas fa-plus"></i> Add Project
+                        </button>
+
+                        <!-- Achievements -->
+                        <h5 class="border-bottom pb-2 mt-4">Achievements</h5>
+                        <div class="form-group">
+                            <textarea class="form-control" id="edit-achievements" name="achievements" rows="3">{{ resume.achievements|join('\n') if resume and resume.achievements }}</textarea>
+                            <small class="form-text text-muted">Separate achievements with new lines</small>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary" id="save-changes-btn">
+                                <span class="spinner-border spinner-border-sm d-none" id="save-spinner" role="status" aria-hidden="true"></span>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Education Template (hidden) -->
+<template id="education-template">
+    <div class="education-item card mb-3">
+        <div class="card-body">
+            <button type="button" class="close remove-education-btn">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="form-group">
+                <label>Degree</label>
+                <input type="text" class="form-control education-degree" name="education[INDEX][degree]">
+            </div>
+            <div class="form-group">
+                <label>Institution</label>
+                <input type="text" class="form-control education-institution" name="education[INDEX][institution]">
+            </div>
+            <div class="form-group">
+                <label>CGPA</label>
+                <input type="text" class="form-control education-cgpa" name="education[INDEX][cgpa]">
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Project Template (hidden) -->
+<template id="project-template">
+    <div class="project-item card mb-3">
+        <div class="card-body">
+            <button type="button" class="close remove-project-btn">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="form-group">
+                <label>Project Name</label>
+                <input type="text" class="form-control project-name" name="projects[INDEX][name]">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea class="form-control project-description" name="projects[INDEX][description]" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Technology Stack</label>
+                <input type="text" class="form-control project-tech" name="projects[INDEX][tech_stack]">
+                <small class="form-text text-muted">Separate technologies with commas</small>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Add new education
+        $('#add-education-btn').on('click', function() {
+            addEducationItem({
+                degree: '',
+                institution: '',
+                cgpa: ''
+            });
+        });
+
+        // Add new project
+        $('#add-project-btn').on('click', function() {
+            addProjectItem({
+                name: '',
+                description: '',
+                tech_stack: ''
+            });
+        });
+
+        // Handle remove buttons for dynamically added items
+        $(document).on('click', '.remove-education-btn', function() {
+            $(this).closest('.education-item').remove();
+        });
+
+        $(document).on('click', '.remove-project-btn', function() {
+            $(this).closest('.project-item').remove();
+        });
+
+        // Form submission
+        $('#resume-edit-form').on('submit', function(e) {
+            e.preventDefault();
+
+            // Show spinner and disable button
+            $('#save-changes-btn').prop('disabled', true);
+            $('#save-spinner').removeClass('d-none');
+
+            // Serialize form data
+            const formData = serializeResumeForm();
+
+            // Send AJAX request
+            $.ajax({
+                url: "{{ url_for('resume.save') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        alert('Resume updated successfully!');
+                        window.location.href = "{{ url_for('resume.view') }}";
+                    } else {
+                        alert('Error: ' + response.error);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while updating your resume. Please try again.');
+                },
+                complete: function() {
+                    // Hide spinner and enable button
+                    $('#save-changes-btn').prop('disabled', false);
+                    $('#save-spinner').addClass('d-none');
+                }
+            });
+        });
+
+        // Helper function to add education item
+        function addEducationItem(edu) {
+            const template = document.querySelector('#education-template').innerHTML;
+            const index = $('.education-item').length;
+            const html = template.replace(/INDEX/g, index);
+            const $element = $(html);
+
+            $element.find('.education-degree').val(edu.degree);
+            $element.find('.education-institution').val(edu.institution);
+            $element.find('.education-cgpa').val(edu.cgpa);
+
+            $('#education-container').append($element);
+        }
+
+        // Helper function to add project item
+        function addProjectItem(project) {
+            const template = document.querySelector('#project-template').innerHTML;
+            const index = $('.project-item').length;
+            const html = template.replace(/INDEX/g, index);
+            const $element = $(html);
+
+            $element.find('.project-name').val(project.name);
+            $element.find('.project-description').val(project.description);
+            $element.find('.project-tech').val(Array.isArray(project.tech_stack) ? project.tech_stack.join(', ') : project.tech_stack);
+
+            $('#projects-container').append($element);
+        }
+
+        // Helper function to serialize resume form
+        function serializeResumeForm() {
+            const formData = {
+                name: $('#edit-name').val(),
+                contact_details: {
+                    email: $('#edit-email').val(),
+                    phone: $('#edit-phone').val()
+                },
+                social_links: {
+                    linkedin: $('#edit-linkedin').val(),
+                    github: $('#edit-github').val()
+                },
+                education: [],
+                skills: $('#edit-skills').val().split(',').map(skill => skill.trim()).filter(Boolean),
+                soft_skills: $('#edit-soft-skills').val().split(',').map(skill => skill.trim()).filter(Boolean),
+                projects: [],
+                achievements: $('#edit-achievements').val().split('\n').map(achievement => achievement.trim()).filter(Boolean)
+            };
+
+            // Extract education items
+            $('.education-item').each(function() {
+                const $item = $(this);
+                formData.education.push({
+                    degree: $item.find('.education-degree').val(),
+                    institution: $item.find('.education-institution').val(),
+                    cgpa: $item.find('.education-cgpa').val()
+                });
+            });
+
+            // Extract project items
+            $('.project-item').each(function() {
+                const $item = $(this);
+                const techStack = $item.find('.project-tech').val();
+
+                formData.projects.push({
+                    name: $item.find('.project-name').val(),
+                    description: $item.find('.project-description').val(),
+                    tech_stack: techStack ? techStack.split(',').map(tech => tech.trim()).filter(Boolean) : []
+                });
+            });
+
+            return formData;
+        }
+    });
+</script>
+{% endblock %}

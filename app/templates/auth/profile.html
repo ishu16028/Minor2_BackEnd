@@ -1,0 +1,90 @@
+<!-- app/templates/auth/profile.html -->
+{% extends "base.html" %}
+
+{% block title %}Profile - JobSeeker Platform{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="card mb-4">
+        <h2>Profile Information</h2>
+
+        <form method="POST" action="{{ url_for('auth.profile') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.name.label }}
+                {{ form.name(class="form-control") }}
+                {% if form.name.errors %}
+                    <div class="form-error">
+                        {% for error in form.name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+            </div>
+            <hr class="my-4">
+            <h3>Change Password</h3>
+            <p class="text-muted mb-3">Leave blank if you don't want to change your password</p>
+            <div class="form-group">
+                {{ form.current_password.label }}
+                {{ form.current_password(class="form-control") }}
+                {% if form.current_password.errors %}
+                    <div class="form-error">
+                        {% for error in form.current_password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.new_password.label }}
+                {{ form.new_password(class="form-control") }}
+                {% if form.new_password.errors %}
+                    <div class="form-error">
+                        {% for error in form.new_password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.confirm_new_password.label }}
+                {{ form.confirm_new_password(class="form-control") }}
+                {% if form.confirm_new_password.errors %}
+                    <div class="form-error">
+                        {% for error in form.confirm_new_password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Connected Accounts</h2>
+        <div class="connected-accounts">
+            <div class="account-item">
+                <div class="account-info">
+                    <img src="{{ url_for('static', filename='img/google-logo.png') }}" alt="Google">
+                    <div>
+                        <h4>Google</h4>
+                        <p>{{ 'Connected' if current_user.google_token else 'Not connected' }}</p>
+                    </div>
+                </div>
+                {% if current_user.google_token %}
+                    <a href="{{ url_for('auth.disconnect_google') }}" class="btn btn-outline-danger">Disconnect</a>
+                {% else %}
+                    <a href="{{ url_for('auth.google_login') }}" class="btn btn-outline-primary">Connect</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

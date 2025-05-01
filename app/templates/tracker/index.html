@@ -1,0 +1,521 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Resume | JobSeeker Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Resume Upload</h1>
+    <p class="lead">Upload your resume to extract information and enable personalized job recommendations.</p>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Upload Your Resume</h5>
+                </div>
+                <div class="card-body">
+                    <form id="resume-upload-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="resume-file">Choose Resume File</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="resume-file" name="resume" accept=".pdf,.docx">
+                                <label class="custom-file-label" for="resume-file">Select file</label>
+                            </div>
+                            <small class="form-text text-muted">Supported formats: PDF, DOCX</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="upload-btn">
+                            <span class="spinner-border spinner-border-sm d-none" id="upload-spinner" role="status" aria-hidden="true"></span>
+                            Upload and Parse
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5>Resume Templates</h5>
+                </div>
+                <div class="card-body">
+                    <p>Don't have a resume? Download one of our professionally designed templates:</p>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <img src="{{ url_for('static', filename='img/resume-template-1-thumb.jpg') }}" class="card-img-top" alt="Resume Template 1">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Professional</h5>
+                                    <a href="{{ url_for('static', filename='resume_templates/professional_template.docx') }}" class="btn btn-sm btn-outline-primary">Download</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <img src="{{ url_for('static', filename='img/resume-template-2-thumb.jpg') }}" class="card-img-top" alt="Resume Template 2">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Modern</h5>
+                                    <a href="{{ url_for('static', filename='resume_templates/modern_template.docx') }}" class="btn btn-sm btn-outline-primary">Download</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Resume Tips</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="resumeTipsAccordion">
+                        <div class="card">
+                            <div class="card-header" id="headingOne">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                        Format for Better Parsing
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#resumeTipsAccordion">
+                                <div class="card-body">
+                                    <ul>
+                                        <li>Use clear section headings (EDUCATION, EXPERIENCE, SKILLS, etc.)</li>
+                                        <li>Avoid complex tables and layouts</li>
+                                        <li>Prefer standard fonts like Arial, Calibri, or Times New Roman</li>
+                                        <li>Include your full name at the top</li>
+                                        <li>Make sure your email and phone number are clearly visible</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingTwo">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        Content Recommendations
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#resumeTipsAccordion">
+                                <div class="card-body">
+                                    <ul>
+                                        <li>Use action verbs to describe your achievements</li>
+                                        <li>Include quantifiable results when possible</li>
+                                        <li>List relevant skills prominently</li>
+                                        <li>Customize for each job application</li>
+                                        <li>Keep it concise (1-2 pages maximum)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingThree">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                        Common Mistakes to Avoid
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#resumeTipsAccordion">
+                                <div class="card-body">
+                                    <ul>
+                                        <li>Spelling and grammar errors</li>
+                                        <li>Using generic objectives</li>
+                                        <li>Including irrelevant personal information</li>
+                                        <li>Using an unprofessional email address</li>
+                                        <li>Overcrowding the page with text</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resume Data Preview Modal -->
+<div class="modal fade" id="resumeDataModal" tabindex="-1" aria-labelledby="resumeDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resumeDataModalLabel">Resume Data Preview</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Please review and edit the extracted information before saving.
+                </div>
+
+                <form id="resume-data-form">
+                    <!-- Basic Information -->
+                    <h5 class="border-bottom pb-2">Basic Information</h5>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Name</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="preview-name" name="name">
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <h5 class="border-bottom pb-2 mt-4">Contact Information</h5>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Email</label>
+                        <div class="col-sm-9">
+                            <input type="email" class="form-control" id="preview-email" name="email">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Phone</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="preview-phone" name="phone">
+                        </div>
+                    </div>
+
+                    <!-- Links -->
+                    <h5 class="border-bottom pb-2 mt-4">Social Links</h5>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">LinkedIn</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="preview-linkedin" name="linkedin">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">GitHub</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="preview-github" name="github">
+                        </div>
+                    </div>
+
+                    <!-- Education -->
+                    <h5 class="border-bottom pb-2 mt-4">Education</h5>
+                    <div id="education-container">
+                        <!-- Education items will be dynamically added here -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-education-btn">
+                        <i class="fas fa-plus"></i> Add Education
+                    </button>
+
+                    <!-- Skills -->
+                    <h5 class="border-bottom pb-2 mt-4">Skills</h5>
+                    <div class="form-group">
+                        <label>Technical Skills</label>
+                        <input type="text" class="form-control" id="preview-skills" name="skills">
+                        <small class="form-text text-muted">Separate skills with commas</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Soft Skills</label>
+                        <input type="text" class="form-control" id="preview-soft-skills" name="soft_skills">
+                        <small class="form-text text-muted">Separate skills with commas</small>
+                    </div>
+
+                    <!-- Projects -->
+                    <h5 class="border-bottom pb-2 mt-4">Projects</h5>
+                    <div id="projects-container">
+                        <!-- Project items will be dynamically added here -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-project-btn">
+                        <i class="fas fa-plus"></i> Add Project
+                    </button>
+
+                    <!-- Achievements -->
+                    <h5 class="border-bottom pb-2 mt-4">Achievements</h5>
+                    <div class="form-group">
+                        <textarea class="form-control" id="preview-achievements" name="achievements" rows="3"></textarea>
+                        <small class="form-text text-muted">Separate achievements with new lines</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-resume-data-btn">
+                    <span class="spinner-border spinner-border-sm d-none" id="save-spinner" role="status" aria-hidden="true"></span>
+                    Save Resume Data
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Education Template (hidden) -->
+<template id="education-template">
+    <div class="education-item card mb-3">
+        <div class="card-body">
+            <button type="button" class="close remove-education-btn">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="form-group">
+                <label>Degree</label>
+                <input type="text" class="form-control education-degree" name="education[INDEX][degree]">
+            </div>
+            <div class="form-group">
+                <label>Institution</label>
+                <input type="text" class="form-control education-institution" name="education[INDEX][institution]">
+            </div>
+            <div class="form-group">
+                <label>CGPA</label>
+                <input type="text" class="form-control education-cgpa" name="education[INDEX][cgpa]">
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Project Template (hidden) -->
+<template id="project-template">
+    <div class="project-item card mb-3">
+        <div class="card-body">
+            <button type="button" class="close remove-project-btn">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="form-group">
+                <label>Project Name</label>
+                <input type="text" class="form-control project-name" name="projects[INDEX][name]">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea class="form-control project-description" name="projects[INDEX][description]" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Technology Stack</label>
+                <input type="text" class="form-control project-tech" name="projects[INDEX][tech_stack]">
+                <small class="form-text text-muted">Separate technologies with commas</small>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize file input
+        $('.custom-file-input').on('change', function() {
+            let fileName = $(this).val().split('\\').pop();
+            $(this).siblings('.custom-file-label').addClass('selected').html(fileName);
+        });
+
+        // Resume upload form submission
+        $('#resume-upload-form').on('submit', function(e) {
+            e.preventDefault();
+
+            // Show spinner and disable button
+            $('#upload-btn').prop('disabled', true);
+            $('#upload-spinner').removeClass('d-none');
+
+            // Create FormData object
+            const formData = new FormData();
+            const resumeFile = $('#resume-file')[0].files[0];
+            formData.append('resume', resumeFile);
+
+            // Send AJAX request to Flask API endpoint
+            $.ajax({
+                url: "{{ url_for('resume.upload') }}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        // Populate the modal with extracted data
+                        populateResumeData(response.data);
+
+                        // Show the modal
+                        $('#resumeDataModal').modal('show');
+                    } else {
+                        alert('Error: ' + response.error);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while processing your resume. Please try again.');
+                },
+                complete: function() {
+                    // Hide spinner and enable button
+                    $('#upload-btn').prop('disabled', false);
+                    $('#upload-spinner').addClass('d-none');
+                }
+            });
+        });
+
+        // Save resume data
+        $('#save-resume-data-btn').on('click', function() {
+            // Show spinner and disable button
+            $(this).prop('disabled', true);
+            $('#save-spinner').removeClass('d-none');
+
+            // Serialize form data
+            const formData = serializeResumeForm();
+
+            // Send AJAX request to save data
+            $.ajax({
+                url: "{{ url_for('resume.save') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        $('#resumeDataModal').modal('hide');
+                        alert('Resume data saved successfully!');
+
+                        // Optionally redirect to a different page
+                        window.location.href = "{{ url_for('jobs.list') }}";
+                    } else {
+                        alert('Error: ' + response.error);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while saving your resume data. Please try again.');
+                },
+                complete: function() {
+                    // Hide spinner and enable button
+                    $('#save-resume-data-btn').prop('disabled', false);
+                    $('#save-spinner').addClass('d-none');
+                }
+            });
+        });
+
+        // Add new education
+        $('#add-education-btn').on('click', function() {
+            addEducationItem({
+                degree: '',
+                institution: '',
+                cgpa: ''
+            });
+        });
+
+        // Add new project
+        $('#add-project-btn').on('click', function() {
+            addProjectItem({
+                name: '',
+                description: '',
+                tech_stack: ''
+            });
+        });
+
+        // Handle remove buttons for dynamically added items
+        $(document).on('click', '.remove-education-btn', function() {
+            $(this).closest('.education-item').remove();
+        });
+
+        $(document).on('click', '.remove-project-btn', function() {
+            $(this).closest('.project-item').remove();
+        });
+
+        // Helper function to populate modal with extracted data
+        function populateResumeData(data) {
+            // Basic info
+            $('#preview-name').val(data.name || '');
+
+            // Contact details
+            if (data.contact_details) {
+                $('#preview-email').val(data.contact_details.email || '');
+                $('#preview-phone').val(data.contact_details.phone || '');
+            }
+
+            // Social links
+            if (data.social_links) {
+                $('#preview-linkedin').val(data.social_links.linkedin || '');
+                $('#preview-github').val(data.social_links.github || '');
+            }
+
+            // Education
+            $('#education-container').empty();
+            if (data.education && data.education.length) {
+                data.education.forEach(function(edu) {
+                    addEducationItem(edu);
+                });
+            }
+
+            // Skills
+            $('#preview-skills').val(data.skills ? data.skills.join(', ') : '');
+            $('#preview-soft-skills').val(data.soft_skills ? data.soft_skills.join(', ') : '');
+
+            // Projects
+            $('#projects-container').empty();
+            if (data.projects && data.projects.length) {
+                data.projects.forEach(function(project) {
+                    addProjectItem(project);
+                });
+            }
+
+            // Achievements
+            $('#preview-achievements').val(data.achievements ? data.achievements.join('\n') : '');
+        }
+
+        // Helper function to add education item
+        function addEducationItem(edu) {
+            const template = document.querySelector('#education-template').innerHTML;
+            const index = $('.education-item').length;
+            const html = template.replace(/INDEX/g, index);
+            const $element = $(html);
+
+            $element.find('.education-degree').val(edu.degree);
+            $element.find('.education-institution').val(edu.institution);
+            $element.find('.education-cgpa').val(edu.cgpa);
+
+            $('#education-container').append($element);
+        }
+
+        // Helper function to add project item
+        function addProjectItem(project) {
+            const template = document.querySelector('#project-template').innerHTML;
+            const index = $('.project-item').length;
+            const html = template.replace(/INDEX/g, index);
+            const $element = $(html);
+
+            $element.find('.project-name').val(project.name);
+            $element.find('.project-description').val(project.description);
+            $element.find('.project-tech').val(Array.isArray(project.tech_stack) ? project.tech_stack.join(', ') : project.tech_stack);
+
+            $('#projects-container').append($element);
+        }
+
+        // Helper function to serialize resume form
+        function serializeResumeForm() {
+            const formData = {
+                name: $('#preview-name').val(),
+                contact_details: {
+                    email: $('#preview-email').val(),
+                    phone: $('#preview-phone').val()
+                },
+                social_links: {
+                    linkedin: $('#preview-linkedin').val(),
+                    github: $('#preview-github').val()
+                },
+                education: [],
+                skills: $('#preview-skills').val().split(',').map(skill => skill.trim()).filter(Boolean),
+                soft_skills: $('#preview-soft-skills').val().split(',').map(skill => skill.trim()).filter(Boolean),
+                projects: [],
+                achievements: $('#preview-achievements').val().split('\n').map(achievement => achievement.trim()).filter(Boolean)
+            };
+
+            // Extract education items
+            $('.education-item').each(function() {
+                const $item = $(this);
+                formData.education.push({
+                    degree: $item.find('.education-degree').val(),
+                    institution: $item.find('.education-institution').val(),
+                    cgpa: $item.find('.education-cgpa').val()
+                });
+            });
+
+            // Extract project items
+            $('.project-item').each(function() {
+                const $item = $(this);
+                const techStack = $item.find('.project-tech').val();
+
+                formData.projects.push({
+                    name: $item.find('.project-name').val(),
+                    description: $item.find('.project-description').val(),
+                    tech_stack: techStack ? techStack.split(',').map(tech => tech.trim()).filter(Boolean) : []
+                });
+            });
+
+            return formData;
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Jobs | JobSeeker Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Job Listings</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Search Jobs</h5>
+                </div>
+                <div class="card-body">
+                    <form id="job-search-form">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="keywords">Keywords</label>
+                                    <input type="text" class="form-control" id="keywords" name="keywords" placeholder="Job title, skills, keywords...">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="location">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location" placeholder="City, state, or remote">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="job-type">Job Type</label>
+                                    <select class="form-control" id="job-type" name="job_type">
+                                        <option value="">All Types</option>
+                                        <option value="full_time">Full Time</option>
+                                        <option value="part_time">Part Time</option>
+                                        <option value="contract">Contract</option>
+                                        <option value="internship">Internship</option>
+                                        <option value="remote">Remote Only</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="job-mode">Job Mode</label>
+                                    <select class="form-control" id="job-mode" name="job_mode">
+                                        <option value="">All Modes</option>
+                                        <option value="Remote">Remote</option>
+                                        <option value="Onsite">On-site</option>
+                                        <option value="Hybrid">Hybrid</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="salary-range">Salary Range</label>
+                                    <select class="form-control" id="salary-range" name="salary_range">
+                                        <option value="">Any Salary</option>
+                                        <option value="0-30000">$0 - $30,000</option>
+                                        <option value="30000-60000">$30,000 - $60,000</option>
+                                        <option value="60000-90000">$60,000 - $90,000</option>
+                                        <option value="90000-120000">$90,000 - $120,000</option>
+                                        <option value="120000+">$120,000+</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="date-posted">Date Posted</label>
+                                    <select class="form-control" id="date-posted" name="date_posted">
+                                        <option value="">Any Time</option>
+                                        <option value="1">Past 24 hours</option>
+                                        <option value="7">Past week</option>
+                                        <option value="30">Past month</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary">Search Jobs</button>
+                                <button type="reset" class="btn btn-secondary">Reset</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Results <small id="job-count" class="text-muted">(0 jobs found)</small></h2>
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-toggle="dropdown" aria-expanded="false">
+                        Sort by
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="sortDropdown">
+                        <a class="dropdown-item sort-option" href="#" data-sort="relevance">Relevance</a>
+                        <a class="dropdown-item sort-option" href="#" data-sort="date">Date</a>
+                        <a class="dropdown-item sort-option" href="#" data-sort="company">Company</a>
+                    </div>
+                </div>
+            </div>
+
+            <div id="job-listings-container">
+                <!-- Job listings will be loaded here -->
+                <div class="text-center py-5">
+                    <p class="text-muted">Use the search form above to find jobs</p>
+                </div>
+            </div>
+
+            <div id="pagination-container" class="d-flex justify-content-center my-4">
+                <!-- Pagination will be added here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="job-detail-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="job-modal-title">Job Title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="job-modal-content">
+                <!-- Job details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" id="apply-button" target="_blank">Apply Now</a>
+                <button type="button" class="btn btn-outline-primary" id="add-to-wishlist">Add to Wishlist</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // This is a placeholder for the JavaScript that would interact with your API
+    // In a real implementation, you'd fetch data from your Flask API endpoints
+    $(document).ready(function() {
+        // Job search form submission
+        $('#job-search-form').on('submit', function(e) {
+            e.preventDefault();
+            searchJobs();
+        });
+
+        // Function to search jobs via API
+        function searchJobs() {
+            // Show loading indicator
+            $('#job-listings-container').html('<div class="text-center py-5"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
+
+            // Get form data
+            const formData = {
+                keywords: $('#keywords').val(),
+                location: $('#location').val(),
+                job_type: $('#job-type').val(),
+                job_mode: $('#job-mode').val(),
+                salary_range: $('#salary-range').val(),
+                date_posted: $('#date-posted').val()
+            };
+
+            // This would be replaced with actual API call
+            // $.ajax({ url: '/api/jobs/list', data: formData, ... });
+
+            // Placeholder for demo
+            setTimeout(function() {
+                $('#job-listings-container').html('<div class="alert alert-info">Job search functionality will be connected to the API</div>');
+                $('#job-count').text('(0 jobs found)');
+            }, 1000);
+        }
+    });
+</script>
+{% endblock %}

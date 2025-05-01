@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard | JobSeeker Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Admin Dashboard</h1>
+    <p class="lead">Manage job listings, HR contacts, and user data.</p>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Job Management</h5>
+                    <p class="card-text">Scrape new job listings and manage existing ones.</p>
+                    <a href="{{ url_for('jobs.scrape_page') }}" class="btn btn-primary">Job Scraper</a>
+                    <a href="{{ url_for('jobs.manage') }}" class="btn btn-outline-primary mt-2">Manage Listings</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">HR Contacts</h5>
+                    <p class="card-text">Manage the database of HR contact information.</p>
+                    <a href="{{ url_for('admin.hr_contacts') }}" class="btn btn-primary">HR Contacts</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">User Management</h5>
+                    <p class="card-text">View and manage registered users.</p>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary">Manage Users</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>System Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-card text-center">
+                                <h2 id="total-users">{{ stats.total_users if stats else '--' }}</h2>
+                                <p>Registered Users</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card text-center">
+                                <h2 id="total-jobs">{{ stats.total_jobs if stats else '--' }}</h2>
+                                <p>Listed Jobs</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card text-center">
+                                <h2 id="total-applications">{{ stats.total_applications if stats else '--' }}</h2>
+                                <p>Job Applications</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card text-center">
+                                <h2 id="total-hr-contacts">{{ stats.total_hr_contacts if stats else '--' }}</h2>
+                                <p>HR Contacts</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .stat-card {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+    .stat-card h2 {
+        font-size: 2.5rem;
+        color: #007bff;
+        margin-bottom: 5px;
+    }
+    .stat-card p {
+        margin-bottom: 0;
+        color: #6c757d;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
